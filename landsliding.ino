@@ -216,14 +216,14 @@ void loop() {
   Serial.println();
   delay(500);
 
-  content.set("fields/pressure/stringValue", String(pressure, 2));
-  content.set("fields/altitude/stringValue", String(altitude, 2));
-  content.set("fields/pressure_seaLevel_cal/stringValue", String(pressure_seaLevel, 2));
+  // content.set("fields/pressure/stringValue", String(pressure, 2));
+  // content.set("fields/altitude/stringValue", String(altitude, 2));
+  // content.set("fields/pressure_seaLevel_cal/stringValue", String(pressure_seaLevel, 2));
 
-  // Firebase communication
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "altitude");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure_seaLevel_cal");
+  // // Firebase communication
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "altitude");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure_seaLevel_cal");
   delay(500);
 
   delay(500);
@@ -264,19 +264,19 @@ void loop() {
   bool check3 = check_acc(Ax, Ay, Az);
   delay(500);
 
-  content.set("fields/Accel_x/stringValue", String(Ax, 2));
-  content.set("fields/Accel_y/stringValue", String(Ay, 2));
-  content.set("fields/Accel_z/stringValue", String(Az, 2));
-  content.set("fields/Gyro_x/stringValue", String(Gx, 2));
-  content.set("fields/Gyro_y/stringValue", String(Gy, 2));
-  content.set("fields/Gyro_z/stringValue", String(Gz, 2));
+  // content.set("fields/Accel_x/stringValue", String(Ax, 2));
+  // content.set("fields/Accel_y/stringValue", String(Ay, 2));
+  // content.set("fields/Accel_z/stringValue", String(Az, 2));
+  // content.set("fields/Gyro_x/stringValue", String(Gx, 2));
+  // content.set("fields/Gyro_y/stringValue", String(Gy, 2));
+  // content.set("fields/Gyro_z/stringValue", String(Gz, 2));
 
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_x");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_y");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_z");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_x");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_y");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_z");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_x");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_y");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_z");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_x");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_y");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_z");
   delay(500);
 
   timeClient.update();
@@ -305,11 +305,11 @@ void loop() {
 
   delay(500);
 
-  content.set("fields/time/stringValue", String(formattedTime));
-  content.set("fields/date/stringValue", String(currentDate));
+  // content.set("fields/time/stringValue", String(formattedTime));
+  // content.set("fields/date/stringValue", String(currentDate));
 
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "time");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "date");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "time");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "date");
   delay(500);
 
   lux = lightMeter.readLightLevel();
@@ -320,8 +320,8 @@ void loop() {
 
   delay(500);
 
-  content.set("fields/lux/stringValue", String(lux));
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "lux");
+  // content.set("fields/lux/stringValue", String(lux));
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "lux");
   delay(500);
 
   // Read temperature and humidity from the DHT sensor
@@ -337,11 +337,11 @@ void loop() {
 
   delay(500);
 
-  content.set("fields/temperature/stringValue", String(temperature));
-  content.set("fields/humidity/stringValue", String(humidity));
+  // content.set("fields/temperature/stringValue", String(temperature));
+  // content.set("fields/humidity/stringValue", String(humidity));
 
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "temperature");
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "humidity");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "temperature");
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "humidity");
   delay(500);
 
   rainSensorValue = analogRead(rainSensorPin);
@@ -373,8 +373,8 @@ void loop() {
 
   delay(500);
 
-  content.set("fields/rainStatus/stringValue", rainStatus);
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "rainStatus");
+  // content.set("fields/rainStatus/stringValue", rainStatus);
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "rainStatus");
   delay(500);
 
   moistureSensorValue = analogRead(soilMoisturePin);
@@ -392,8 +392,8 @@ void loop() {
   bool check1 = check_moisture(soilMoistureLevel);
   delay(500);
 
-  content.set("fields/soilMoistureLevel/stringValue", soilMoistureLevel);
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "soilMoistureLevel");
+  // content.set("fields/soilMoistureLevel/stringValue", soilMoistureLevel);
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "soilMoistureLevel");
   delay(500);
 
   vibration = pulseIn(vibrationSensor, HIGH);
@@ -408,25 +408,25 @@ void loop() {
   bool check2 = check_vibration(vibrationFloat);
   delay(500);
 
-  content.set("fields/vibrationFloat/stringValue", vibrationFloat);
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "vibrationFloat");
+  // content.set("fields/vibrationFloat/stringValue", vibrationFloat);
+  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "vibrationFloat");
   delay(500);
 
   String check = "";
 
   if (check1 == false && check2 == false && check3 == false) {
-    check = "no Alert";
+    check = "0";
   } else if (check3 == true) {
-    check = "High Alert";
+    check = "3";
   } else if (check2 == true) {
-    check = "Medium Alert";
+    check = "2";
   } else if (check1 == true) {
-    check = "Low Alert";
+    check = "1";
   }
 
   Serial.println(check);
-  content.set("fields/check/stringValue", check);
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "check");
+  content.set("fields/check/stringValue", String(check));
+  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw());
   delay(500);
 }
 
