@@ -9,7 +9,10 @@
 #include <Adafruit_BMP085.h>
 #include <Adafruit_MPU6050.h>
 #include <BH1750.h>
+#include <OneWire.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <DallasTemperature.h>
 
 // Define Firebase API Key, Project ID, and user credentials
 #define API_KEY "AIzaSyBsdW6ohHRrNWxibrxiB9ZEgGBm2HdXqO4"
@@ -20,6 +23,9 @@
 /* 1. Define the WiFi credentials */
 #define WIFI_SSID "Abdullah"
 #define WIFI_PASSWORD "abdullah321"
+
+// Create a WiFiClientSecure object
+WiFiClientSecure client;
 
 //sim800L configuration
 #define SIM800L_RX 27
@@ -75,7 +81,8 @@ const int vibrationSensor = 14;
 long vibration;
 
 //soil temperature sensor
-
+const int lm35Pin = 2;
+float soilTemperature;
 
 // Define Firebase Data object, Firebase authentication, and configuration
 FirebaseData fbdo;
@@ -108,15 +115,6 @@ void setup(void) {
   Serial.println(WiFi.localIP());
   Serial.println();
 
-  Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
-
-  /* Assign the api key (required) */
-  config.api_key = API_KEY;
-
-  /* Assign the user sign in credentials */
-  auth.user.email = USER_EMAIL;
-  auth.user.password = USER_PASSWORD;
-
   // Try to initialize!
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
@@ -136,21 +134,6 @@ void setup(void) {
     Serial.println("Could not find a valid BMP085/BMP180 sensor, check wiring!");
   }
 
-  /* Assign the callback function for the long running token generation task */
-  config.token_status_callback = tokenStatusCallback;  // see addons/TokenHelper.h
-
-  // Comment or pass false value when WiFi reconnection will control by your code or third party library e.g. WiFiManager
-  Firebase.reconnectNetwork(true);
-
-  // Since v4.4.x, BearSSL engine was used, the SSL buffer need to be set.
-  // Large data transmission may require larger RX buffer, otherwise connection issue or data read time out can be occurred.
-  fbdo.setBSSLBufferSize(4096 /* Rx buffer size in bytes from 512 - 16384 */, 1024 /* Tx buffer size in bytes from 512 - 16384 */);
-
-  // Limit the size of response payload to be collected in FirebaseData
-  fbdo.setResponseSize(2048);
-
-  Firebase.begin(&config, &auth);
-
   // Initialize a NTPClient to get time
   timeClient.begin();
   // Set offset time in seconds to adjust for your timezone, for example:
@@ -166,7 +149,6 @@ void setup(void) {
   Serial.println(F("BH1750 Test "));
 
   pinMode(vibrationSensor, INPUT);
-  //sensors.begin();
   dht.begin();
 
   sim800lSerial->begin(4800, SERIAL_8N1, SIM800L_TX, SIM800L_RX);
@@ -190,12 +172,73 @@ void setup(void) {
   Serial.println(F("GSM SIM800L is OK"));
 }
 
-void loop() {
-  // Define the path to the Firestore document
-  String documentPath = "EspData/sensor_node_1";
+void sendData(String Ax, String Ay, String Az, String Gx, String Gy, String Gz, String altitude, String pressure, String sea_level, String lux, String rainStatus, String soilTemp, String vibration, float temperature, float humidity, String alert) {
+  // wait for WiFi connection
+  if ((WiFi.status() == WL_CONNECTED)) {
 
-  // Create a FirebaseJson object for storing data
-  FirebaseJson content;
+    timeClient.update();
+
+    time_t epochTime = timeClient.getEpochTime();
+
+    String time = timeClient.getFormattedTime();
+    Serial.print("Formatted Time: ");
+    Serial.println(time);
+
+    //Get a time structure
+    struct tm *ptm = gmtime((time_t *)&epochTime);
+
+    int monthDay = ptm->tm_mday;
+
+    int currentMonth = ptm->tm_mon + 1;
+
+    int currentYear = ptm->tm_year + 1900;
+
+    //Print complete date:
+    String date = String(monthDay) + "-" + String(currentMonth) + "-" + String(currentYear);
+    Serial.print("Current date: ");
+    Serial.println(date);
+
+    Serial.println("");
+
+    delay(500);
+
+    // Disable certificate verification
+    client.setInsecure();
+
+    HTTPClient https;
+
+    Serial.print("[HTTPS] begin...\n");
+    if (https.begin(client, "https://ap-southeast-1.aws.data.mongodb-api.com/app/data-yafre/endpoint/data/v1/action/insertOne")) {  // HTTPS
+
+      https.addHeader("Content-Type", "application/json");
+      https.addHeader("api-key", "33jZRxFskM1c3rxSXqEuf86JOFEQVEwyc4w39mZyvUba2SJfd8mLAv8KggKSQ8rm");
+      String payload = "{\r\n\"dataSource\":\"Cluster0\",\r\n\"database\":\"landsliding\",\r\n\"collection\":\"node\",\r\n\"document\": {\"Ax\": \"" + Ax + "\",\"Ay\": \"" + Ay + "\",\"Az\": \"" + Az + "\",\"Gx\": \"" + Gx + "\",\"Gy\": \"" + Gy + "\",\"Gz\": \"" + Gz + "\",\"altitude\": \"" + altitude + "\",\"pressure\": \"" + pressure + "\",\"Pressure at Sea Level\": \"" + sea_level + "\",\"light intensity\": \"" + lux + "\",\"rainStatus\": \"" + rainStatus + "\",\"soilTemperature\": \"" + soilTemp + "\",\"vibration\": \"" + vibration + "\",\"temperature\": \"" + String(temperature) + "\",\"humidity\": \"" + String(humidity) + "\",\"date\": \"" + date + "\",\"time\": \"" + time + "\",\"alert\": \"" + alert + "\"}\r\n}";
+      Serial.print("[HTTPS] GET...\n");
+      // start connection and send HTTP header
+      int httpCode = https.POST(payload);
+
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        // HTTP header has been send and Server response header has been handled
+        Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+
+        // file found at server
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+          String payload = https.getString();
+          Serial.println(payload);
+        }
+      } else {
+        Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+      }
+
+      https.end();
+    } else {
+      Serial.printf("[HTTPS] Unable to connect\n");
+    }
+  }
+}
+
+void loop() {
 
   pressure = bmp.readPressure();
   altitude = bmp.readAltitude(101325);
@@ -216,22 +259,21 @@ void loop() {
   Serial.println();
   delay(500);
 
-  // content.set("fields/pressure/stringValue", String(pressure, 2));
-  // content.set("fields/altitude/stringValue", String(altitude, 2));
-  // content.set("fields/pressure_seaLevel_cal/stringValue", String(pressure_seaLevel, 2));
+  // Read the analog value from LM35 sensor
+  int sensorValue = analogRead(lm35Pin);
+  Serial.println(sensorValue);
 
-  // // Firebase communication
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "altitude");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "pressure_seaLevel_cal");
-  delay(500);
+  // Convert analog reading to voltage
+  float voltage = sensorValue * (5.00 / 4095.0);
 
-  delay(500);
+  // Convert voltage to temperature in Celsius
+  float temperatureC = voltage * 100.0;
 
-  //content.set("fields/soilTemperature/stringValue", String(temperatureC, 2));
+  // Print temperature to serial monitor
+  Serial.print("Soil Temperature: ");
+  Serial.print(temperatureC);
+  Serial.println(" °C");
 
-  // Firebase communication
-  //Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "soilTemperature");
   delay(500);
 
   mpu_accel->getEvent(&accel);
@@ -261,55 +303,7 @@ void loop() {
   Serial.println(" radians/s ");
   Serial.println();
 
-  bool check3 = check_acc(Ax, Ay, Az);
-  delay(500);
-
-  // content.set("fields/Accel_x/stringValue", String(Ax, 2));
-  // content.set("fields/Accel_y/stringValue", String(Ay, 2));
-  // content.set("fields/Accel_z/stringValue", String(Az, 2));
-  // content.set("fields/Gyro_x/stringValue", String(Gx, 2));
-  // content.set("fields/Gyro_y/stringValue", String(Gy, 2));
-  // content.set("fields/Gyro_z/stringValue", String(Gz, 2));
-
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_x");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_y");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Accel_z");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_x");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_y");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "Gyro_z");
-  delay(500);
-
-  timeClient.update();
-
-  time_t epochTime = timeClient.getEpochTime();
-
-  String formattedTime = timeClient.getFormattedTime();
-  Serial.print("Formatted Time: ");
-  Serial.println(formattedTime);
-
-  //Get a time structure
-  struct tm *ptm = gmtime((time_t *)&epochTime);
-
-  int monthDay = ptm->tm_mday;
-
-  int currentMonth = ptm->tm_mon + 1;
-
-  int currentYear = ptm->tm_year + 1900;
-
-  //Print complete date:
-  String currentDate = String(monthDay) + "-" + String(currentMonth) + "-" + String(currentYear);
-  Serial.print("Current date: ");
-  Serial.println(currentDate);
-
-  Serial.println("");
-
-  delay(500);
-
-  // content.set("fields/time/stringValue", String(formattedTime));
-  // content.set("fields/date/stringValue", String(currentDate));
-
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "time");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "date");
+  check_acc(Ax, Ay, Az);
   delay(500);
 
   lux = lightMeter.readLightLevel();
@@ -320,13 +314,12 @@ void loop() {
 
   delay(500);
 
-  // content.set("fields/lux/stringValue", String(lux));
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "lux");
-  delay(500);
-
   // Read temperature and humidity from the DHT sensor
-  temperature = dht.readTemperature();
-  humidity = dht.readHumidity();
+  // temperature = dht.readTemperature();
+  // humidity = dht.readHumidity();
+
+  temperature = 23.3;
+  humidity = 56.8;
 
   Serial.print("Temperature:");
   Serial.println(temperature);
@@ -335,13 +328,6 @@ void loop() {
   Serial.println(humidity);
   Serial.println();
 
-  delay(500);
-
-  // content.set("fields/temperature/stringValue", String(temperature));
-  // content.set("fields/humidity/stringValue", String(humidity));
-
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "temperature");
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "humidity");
   delay(500);
 
   rainSensorValue = analogRead(rainSensorPin);
@@ -373,10 +359,6 @@ void loop() {
 
   delay(500);
 
-  // content.set("fields/rainStatus/stringValue", rainStatus);
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "rainStatus");
-  delay(500);
-
   moistureSensorValue = analogRead(soilMoisturePin);
   Serial.println("Soil Moisture:");
   Serial.println(moistureSensorValue);
@@ -389,11 +371,7 @@ void loop() {
   Serial.println("%");
   Serial.println();
 
-  bool check1 = check_moisture(soilMoistureLevel);
-  delay(500);
-
-  // content.set("fields/soilMoistureLevel/stringValue", soilMoistureLevel);
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "soilMoistureLevel");
+  check_moisture(soilMoistureLevel);
   delay(500);
 
   vibration = pulseIn(vibrationSensor, HIGH);
@@ -405,33 +383,30 @@ void loop() {
   Serial.println(vibrationFloat);
   Serial.println();
 
-  bool check2 = check_vibration(vibrationFloat);
+  check_vibration(vibrationFloat);
   delay(500);
 
-  // content.set("fields/vibrationFloat/stringValue", vibrationFloat);
-  // Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "vibrationFloat");
-  delay(500);
-
-  String check = "";
+  String alert = "";
 
   if (check1 == false && check2 == false && check3 == false) {
-    check = "0";
+    alert = "0";
   } else if (check3 == true) {
-    check = "3";
+    alert = "3";
   } else if (check2 == true) {
-    check = "2";
+    alert = "2";
   } else if (check1 == true) {
-    check = "1";
+    alert = "1";
   }
 
-  Serial.println(check);
-  content.set("fields/check/stringValue", String(check));
-  Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw());
-  delay(500);
+  Serial.println(alert);
+  
+  delay(200);
+
+  sendData(String(Ax), String(Ay), String(Az), String(Gx), String(Gy), String(Gz), String(altitude), String(pressure), String(pressure_seaLevel), String(lux), rainStatus, String(temperatureC), String(vibrationFloat), temperature, humidity);
+  delay(200);
 }
 
 //check accelerometer values
-
 bool check_acc(float xValue, float yValue, float zValue) {
   if (xValue < minVal || xValue > maxVal || yValue < minVal || yValue > maxVal || zValue < minVal || zValue > maxVal) {
     // Specify the recipient's phone number and SMS content
