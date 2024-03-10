@@ -212,7 +212,7 @@ void sendData(String Ax, String Ay, String Az, String Gx, String Gy, String Gz, 
 
       https.addHeader("Content-Type", "application/json");
       https.addHeader("api-key", "33jZRxFskM1c3rxSXqEuf86JOFEQVEwyc4w39mZyvUba2SJfd8mLAv8KggKSQ8rm");
-      String payload = "{\r\n\"dataSource\":\"Cluster0\",\r\n\"database\":\"landsliding\",\r\n\"collection\":\"node\",\r\n\"document\": {\"Ax\": \"" + Ax + "\",\"Ay\": \"" + Ay + "\",\"Az\": \"" + Az + "\",\"Gx\": \"" + Gx + "\",\"Gy\": \"" + Gy + "\",\"Gz\": \"" + Gz + "\",\"altitude\": \"" + altitude + "\",\"pressure\": \"" + pressure + "\",\"Pressure at Sea Level\": \"" + sea_level + "\",\"light intensity\": \"" + lux + "\",\"rainStatus\": \"" + rainStatus + "\",\"soilTemperature\": \"" + soilTemp + "\",\"vibration\": \"" + vibration + "\",\"temperature\": \"" + String(temperature) + "\",\"humidity\": \"" + String(humidity) + "\",\"date\": \"" + date + "\",\"time\": \"" + time + "\",\"alert\": \"" + alert + "\"}\r\n}";
+      String payload = "{\r\n\"dataSource\":\"Cluster0\",\r\n\"database\":\"landsliding\",\r\n\"collection\":\"node\",\r\n\"document\": {\"Ax\": \"" + Ax + "\",\"Ay\": \"" + Ay + "\",\"Az\": \"" + Az + "\",\"Gx\": \"" + Gx + "\",\"Gy\": \"" + Gy + "\",\"Gz\": \"" + Gz + "\",\"altitude\": \"" + altitude + "\",\"pressure\": \"" + pressure + "\",\"Pressure at Sea Level\": \"" + sea_level + "\",\"lux\": \"" + lux + "\",\"rainStatus\": \"" + rainStatus + "\",\"soilTemperature\": \"" + soilTemp + "\",\"vibration\": \"" + vibration + "\",\"temperature\": \"" + String(temperature) + "\",\"humidity\": \"" + String(humidity) + "\",\"date\": \"" + date + "\",\"time\": \"" + time + "\",\"alert\": \"" + alert + "\"}\r\n}";
       Serial.print("[HTTPS] GET...\n");
       // start connection and send HTTP header
       int httpCode = https.POST(payload);
@@ -303,7 +303,7 @@ void loop() {
   Serial.println(" radians/s ");
   Serial.println();
 
-  check_acc(Ax, Ay, Az);
+  bool check3 = check_acc(Ax, Ay, Az);
   delay(500);
 
   lux = lightMeter.readLightLevel();
@@ -315,11 +315,8 @@ void loop() {
   delay(500);
 
   // Read temperature and humidity from the DHT sensor
-  // temperature = dht.readTemperature();
-  // humidity = dht.readHumidity();
-
-  temperature = 23.3;
-  humidity = 56.8;
+   temperature = dht.readTemperature();
+   humidity = dht.readHumidity();
 
   Serial.print("Temperature:");
   Serial.println(temperature);
@@ -371,7 +368,7 @@ void loop() {
   Serial.println("%");
   Serial.println();
 
-  check_moisture(soilMoistureLevel);
+  bool check1 = check_moisture(soilMoistureLevel);
   delay(500);
 
   vibration = pulseIn(vibrationSensor, HIGH);
@@ -383,7 +380,7 @@ void loop() {
   Serial.println(vibrationFloat);
   Serial.println();
 
-  check_vibration(vibrationFloat);
+  bool check2 = check_vibration(vibrationFloat);
   delay(500);
 
   String alert = "";
@@ -402,7 +399,7 @@ void loop() {
   
   delay(200);
 
-  sendData(String(Ax), String(Ay), String(Az), String(Gx), String(Gy), String(Gz), String(altitude), String(pressure), String(pressure_seaLevel), String(lux), rainStatus, String(temperatureC), String(vibrationFloat), temperature, humidity);
+  sendData(String(Ax), String(Ay), String(Az), String(Gx), String(Gy), String(Gz), String(altitude), String(pressure), String(pressure_seaLevel), String(lux), rainStatus, String(temperatureC), String(vibrationFloat), temperature, humidity, alert);
   delay(200);
 }
 
