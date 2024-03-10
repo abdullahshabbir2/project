@@ -4,7 +4,6 @@
 #include <WiFiUdp.h>
 #include <Wire.h>
 #include <DHT.h>
-#include <Firebase_ESP_Client.h>
 #include <addons/TokenHelper.h>
 #include <Adafruit_BMP085.h>
 #include <Adafruit_MPU6050.h>
@@ -13,12 +12,6 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <DallasTemperature.h>
-
-// Define Firebase API Key, Project ID, and user credentials
-#define API_KEY "AIzaSyBsdW6ohHRrNWxibrxiB9ZEgGBm2HdXqO4"
-#define FIREBASE_PROJECT_ID "landsliding-d9a8c"
-#define USER_EMAIL "abdullahshabbir2@gmail.com"
-#define USER_PASSWORD "abdullah2612"
 
 /* 1. Define the WiFi credentials */
 #define WIFI_SSID "Abdullah"
@@ -83,11 +76,6 @@ long vibration;
 //soil temperature sensor
 const int lm35Pin = 2;
 float soilTemperature;
-
-// Define Firebase Data object, Firebase authentication, and configuration
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
 
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
