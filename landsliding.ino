@@ -4,6 +4,7 @@
 #include <WiFiUdp.h>
 #include <Wire.h>
 #include <DHT.h>
+#include <Firebase_ESP_Client.h>
 #include <addons/TokenHelper.h>
 #include <Adafruit_BMP085.h>
 #include <Adafruit_MPU6050.h>
@@ -200,7 +201,7 @@ void sendData(String Ax, String Ay, String Az, String Gx, String Gy, String Gz, 
 
       https.addHeader("Content-Type", "application/json");
       https.addHeader("api-key", "33jZRxFskM1c3rxSXqEuf86JOFEQVEwyc4w39mZyvUba2SJfd8mLAv8KggKSQ8rm");
-      String payload = "{\r\n\"dataSource\":\"Cluster0\",\r\n\"database\":\"landsliding\",\r\n\"collection\":\"node\",\r\n\"document\": {\"Ax\": \"" + Ax + "\",\"Ay\": \"" + Ay + "\",\"Az\": \"" + Az + "\",\"Gx\": \"" + Gx + "\",\"Gy\": \"" + Gy + "\",\"Gz\": \"" + Gz + "\",\"altitude\": \"" + altitude + "\",\"pressure\": \"" + pressure + "\",\"Pressure at Sea Level\": \"" + sea_level + "\",\"lux\": \"" + lux + "\",\"rainStatus\": \"" + rainStatus + "\",\"soilTemperature\": \"" + soilTemp + "\",\"vibration\": \"" + vibration + "\",\"temperature\": \"" + String(temperature) + "\",\"humidity\": \"" + String(humidity) + "\",\"date\": \"" + date + "\",\"time\": \"" + time + "\",\"alert\": \"" + alert + "\"}\r\n}";
+      String payload = "{\r\n\"dataSource\":\"Cluster0\",\r\n\"database\":\"landsliding\",\r\n\"collection\":\"node\",\r\n\"document\": {\"Accel_x\": \"" + Ax + "\",\"Accel_y\": \"" + Ay + "\",\"Accel_z\": \"" + Az + "\",\"Gyro_x\": \"" + Gx + "\",\"Gyro_y\": \"" + Gy + "\",\"Gyro_z\": \"" + Gz + "\",\"altitude\": \"" + altitude + "\",\"pressure\": \"" + pressure + "\",\"Pressure at Sea Level\": \"" + sea_level + "\",\"lux\": \"" + lux + "\",\"rainStatus\": \"" + rainStatus + "\",\"soilTemperature\": \"" + soilTemp + "\",\"vibration\": \"" + vibration + "\",\"temperature\": \"" + String(temperature) + "\",\"humidity\": \"" + String(humidity) + "\",\"date\": \"" + date + "\",\"time\": \"" + time + "\",\"alert\": \"" + alert + "\"}\r\n}";
       Serial.print("[HTTPS] GET...\n");
       // start connection and send HTTP header
       int httpCode = https.POST(payload);
